@@ -59,6 +59,9 @@ judge-girl:
       # the secret can be created following the instructions: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
       # you can replace it according to your secret's name
       image-pull-secret: regcred
+    amqp:
+      host: ${judge-girl.amqp.host}
+      port: ${judge-girl.amqp.port}
 
 
 jwt:

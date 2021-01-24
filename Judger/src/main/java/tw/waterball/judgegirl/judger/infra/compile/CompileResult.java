@@ -13,12 +13,16 @@
 
 package tw.waterball.judgegirl.judger.infra.compile;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * @author - johnny850807@gmail.com (Waterball)
  */
 @Getter
+@ToString
+@EqualsAndHashCode
 public class CompileResult {
     private boolean isSuccessful;
     private String errorMessage;

@@ -108,6 +108,8 @@ public class CCJudger extends PluginExtendedJudger {
 
         ZipUtils.unzipToDestination(zip.getInputStream(),
                 submissionHome.getSourceRoot().getPath());
+
+        logger.info("Downloaded Provided Codes.");
     }
 
     @Override
@@ -120,6 +122,7 @@ public class CCJudger extends PluginExtendedJudger {
 
         ZipUtils.unzipToDestination(zip.getInputStream(),
                 submissionHome.getSourceRoot().getPath());
+        logger.info("Downloaded Submitted Codes.");
     }
 
     @Override
@@ -128,6 +131,8 @@ public class CCJudger extends PluginExtendedJudger {
         FileResource zip = problemServiceDriver.downloadTestCaseIOs(
                 getProblem().getId(), getProblem().getTestcaseIOsFileId());
         ZipUtils.unzipToDestination(zip.getInputStream(), submissionHome.getPath());
+
+        logger.info("Downloaded Testcase IOs.");
     }
 
     @Override
@@ -136,9 +141,10 @@ public class CCJudger extends PluginExtendedJudger {
         String script = getProblem().getCompilation().getScript();
         Files.write(getCompileScriptPath(), script.getBytes());
         Compiler compiler = compilerFactory.create(getSourceRoot().getPath());
-        return compiler.compile(getProblem().getCompilation());
+        CompileResult result = compiler.compile(getProblem().getCompilation());
+        logger.info("Compile result: " + result);
+        return result;
     }
-
 
     @Override
     @SneakyThrows
@@ -173,8 +179,10 @@ public class CCJudger extends PluginExtendedJudger {
         TestcaseExecutor testcaseExecutor =
                 testcaseExecutorFactory.create(getSubmission().getId(),
                         testcase, judgerWorkspace);
-        return testcaseExecutor.executeProgramByProfiler(
+        TestcaseExecutionResult result = testcaseExecutor.executeProgramByProfiler(
                 judgerWorkspace.getProfilerPath());
+        logger.info("Completed the execution of the testcases, result: " + result);
+        return result;
     }
 
     @Override

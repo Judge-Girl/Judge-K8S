@@ -17,11 +17,13 @@ import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.apis.BatchV1Api;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tw.waterball.judgegirl.commons.utils.ResourceUtils;
+import tw.waterball.judgegirl.springboot.configs.properties.JudgeGirlAmqpProps;
+import tw.waterball.judgegirl.springboot.configs.properties.JudgeGirlJudgerProps;
+import tw.waterball.judgegirl.springboot.configs.properties.ServiceProps;
 import tw.waterball.judgegirl.springboot.submission.impl.deployer.k8s.K8SJudgerDeployer;
 import tw.waterball.judgegirl.submissionservice.ports.JudgerDeployer;
 
@@ -38,19 +40,17 @@ import java.io.InputStreamReader;
 public class K8SDeployerAutoConfiguration {
     static final String STRATEGY = "kubernetes";
 
-    @Bean
-    public JudgerDeployer kubernetesJudgerDeployer(BatchV1Api api,
-                                                   @Value("${judge-girl.judger.job.name-format}")
-                                                           String judgerJobNameFormat,
-                                                   @Value("${judge-girl.judger.image.name}")
-                                                               String judgerImageName,
-                                                   @Value("${judge-girl.judger.container.name-format}")
-                                                               String judgerContainerNameFormat,
-                                                   @Value("${judge-girl.judger.kubernetes.image-pull-secret}")
-                                                               String judgerImagePullSecret) {
-        return new K8SJudgerDeployer(api, judgerJobNameFormat, judgerImageName, judgerContainerNameFormat, judgerImagePullSecret);
-    }
 
+
+    @Bean
+    public JudgerDeployer kubernetesJudgerDeployer(BatchV1Api k8sApi,
+                                                   ServiceProps.ProblemService problemServiceProps,
+                                                   ServiceProps.SubmissionService submissionServiceProps,
+                                                   JudgeGirlAmqpProps amqpProp,
+                                                   JudgeGirlJudgerProps deployProps) {
+        return new K8SJudgerDeployer(k8sApi,
+                problemServiceProps, submissionServiceProps, amqpProp, deployProps);
+    }
 
     @Bean
     public ApiClient apiClient() throws IOException {

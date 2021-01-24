@@ -49,7 +49,7 @@ public interface JudgerEnvVariables {
 
 
     static void apply(Applier applier, Values values) {
-        applier = handleDotsInEnvs(applier);
+        applier = normalizeEnv(logging(applier));
 
         applier.apply(ENV_STUDENT_ID, values.studentId);
         applier.apply(ENV_PROBLEM_ID, values.problemId);
@@ -73,9 +73,16 @@ public interface JudgerEnvVariables {
         applier.apply(ENV_VERDICT_ISSUED_ROUTING_KEY_FORMAT, values.verdictIssuedRoutingKeyFormat);
     }
 
+    static Applier normalizeEnv(Applier applier) {
+        return (env, value) -> applier.apply(normalizeEnv(env), value);
+    }
+
     // Since dots are usually not supported in env, convert the key in upper case format with underscore
-    static Applier handleDotsInEnvs(Applier applier) {
-        return (env, value) -> applier.apply(convertEnv(env), value);
+    static Applier logging(Applier applier) {
+        return (env, value) -> {
+            logger.debug(() -> "Apply " + env + ": " + value);
+            applier.apply(env, value);
+        };
     }
 
     interface Applier {
@@ -138,14 +145,14 @@ public interface JudgerEnvVariables {
 
 
     static String getenv(String envKey) {
-        String value = System.getenv(convertEnv(envKey));
+        String value = System.getenv(normalizeEnv(envKey));
         if (value == null) {
             throw new IllegalStateException("Environment variable '" + envKey + "' not found.");
         }
         return value;
     }
 
-    static String convertEnv(String env) {
+    static String normalizeEnv(String env) {
         return env.toUpperCase().replaceAll("\\.", "_")
                 .replaceAll("-", "_");
     }

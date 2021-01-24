@@ -22,8 +22,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import tw.waterball.judgegirl.commons.utils.NotifyWaitLock;
 import tw.waterball.judgegirl.entities.submission.Verdict;
-import tw.waterball.judgegirl.submissionservice.domain.repositories.SubmissionRepository;
 import tw.waterball.judgegirl.submissionapi.views.VerdictIssuedEvent;
+import tw.waterball.judgegirl.submissionservice.domain.repositories.SubmissionRepository;
 
 /**
  * @author - johnny850807@gmail.com (Waterball)
@@ -39,7 +39,6 @@ public class VerdictIssuedEventHandler {
         this.objectMapper = objectMapper;
         this.submissionRepository = submissionRepository;
     }
-
 
     // This is for test-purpose, test script can wait for this lock until the next onIssueVerdict()
     public final NotifyWaitLock onHandlingCompletion$ = new NotifyWaitLock();

@@ -15,7 +15,7 @@ services:
       RABBITMQ_DEFAULT_PASS: PLACEHOLDER
       RABBITMQ_DEFAULT_VHOST: /judge-girl
     networks:
-      - infra
+      - judge-girl
 
   student-service:
     build: Spring-Boot/Spring-Boot-Student
@@ -29,8 +29,7 @@ services:
       - mongodb
       - rabbitmq
     networks:
-      - services
-      - infra
+      - judge-girl
 
   problem-service:
     build: Spring-Boot/Spring-Boot-Problem
@@ -43,8 +42,7 @@ services:
       - mongodb
       - rabbitmq
     networks:
-      - services
-      - infra
+      - judge-girl
 
   submission-service:
     build: Spring-Boot/Spring-Boot-Submission
@@ -57,8 +55,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # docker-in-docker for running judger
     networks:
-      - services
-      - infra
+      - judge-girl
     depends_on:
       - mongodb
       - rabbitmq
@@ -69,5 +66,4 @@ services:
 volumes:
   db-data:
 networks:
-  services:
-  infra:
+  judge-girl:
