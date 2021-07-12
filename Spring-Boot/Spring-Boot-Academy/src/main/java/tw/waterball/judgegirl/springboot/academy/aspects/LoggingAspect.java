@@ -33,7 +33,7 @@ public class LoggingAspect {
     private static final Logger DELETE_EXAM_USE_CASE_LOGGER = LoggerFactory.getLogger(DeleteExamUseCase.class);
     private static final Logger ADD_GROUP_OF_EXAMINEES_USE_CASE_LOGGER = LoggerFactory.getLogger(AddGroupOfExamineesUseCase.class);
     private static final Logger ADD_EXAMINEES_USE_CASE_LOGGER = LoggerFactory.getLogger(AddExamineesUseCase.class);
-    private static final Logger CALCULATE_EXAM_SCORE_USE_CASE_LOGGER = LoggerFactory.getLogger(CalculateExamScoreUseCase.class);
+    private static final Logger CREATE_EXAM_TRANSCRIPT_USE_CASE_LOGGER = LoggerFactory.getLogger(CreateExamTranscriptUseCase.class);
     private static final Logger CREATE_QUESTION_USE_CASE_LOGGER = LoggerFactory.getLogger(CreateQuestionUseCase.class);
     private static final Logger UPDATE_QUESTION_USE_CASE_LOGGER = LoggerFactory.getLogger(UpdateQuestionUseCase.class);
     private static final Logger DELETE_QUESTION_USE_CASE_LOGGER = LoggerFactory.getLogger(DeleteQuestionUseCase.class);
@@ -110,11 +110,11 @@ public class LoggingAspect {
                 request.getExamId(), join(", ", request.getEmails()));
     }
 
-    @Before("bean(calculateExamScoreUseCase)")
-    public void logCalculateExamScoreUseCase(JoinPoint joinPoint) {
+    @Before("bean(createExamTranscriptUseCase)")
+    public void logCreateExamTranscriptUseCase(JoinPoint joinPoint) {
         var args = joinPoint.getArgs();
         var examId = (Integer) args[0];
-        CALCULATE_EXAM_SCORE_USE_CASE_LOGGER.trace("[Calculate Exam Score] examId={}", examId);
+        CREATE_EXAM_TRANSCRIPT_USE_CASE_LOGGER.trace("[Create Exam Transcript] examId={}", examId);
     }
 
     @Before("bean(createQuestionUseCase)")

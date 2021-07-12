@@ -2,6 +2,9 @@ package tw.waterball.judgegirl.springboot.academy.controllers;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tw.waterball.judgegirl.academy.domain.repositories.ExamFilter;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static tw.waterball.judgegirl.commons.utils.StreamUtils.mapToList;
 import static tw.waterball.judgegirl.springboot.utils.MultipartFileUtils.convertMultipartFilesToFileResources;
+import static tw.waterball.judgegirl.springboot.utils.ResponseEntityUtils.respondInputStreamResource;
 import static tw.waterball.judgegirl.submissionapi.clients.SubmissionApiClient.SUBMIT_CODE_MULTIPART_KEY_NAME;
 
 @CrossOrigin
@@ -44,7 +48,7 @@ public class ExamController {
     private final AddGroupOfExamineesUseCase addGroupOfExamineesUseCase;
     private final GetExamineesUseCase getExamineesUseCase;
     private final AddExamineesUseCase addExamineesUseCase;
-    private final CalculateExamScoreUseCase calculateExamScoreUseCase;
+    private final CreateExamTranscriptUseCase createExamTranscriptUseCase;
     private final CreateQuestionUseCase createQuestionUseCase;
     private final UpdateQuestionUseCase updateQuestionUseCase;
     private final DeleteQuestionUseCase deleteQuestionUseCase;
@@ -161,8 +165,18 @@ public class ExamController {
                                            @PathVariable int examId) {
         return tokenService.returnIfAdmin(authorization, token -> {
             ExamTranscriptPresenter presenter = new ExamTranscriptPresenter();
-            calculateExamScoreUseCase.execute(examId, presenter);
+            createExamTranscriptUseCase.execute(examId, presenter);
             return presenter.present();
+        });
+    }
+
+    @GetMapping(value = "/exams/{examId}/transcript/csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<InputStreamResource> createCsvFileOfTranscript(@RequestHeader("Authorization") String authorization,
+                                                                         @PathVariable int examId) {
+        return tokenService.returnIfAdmin(authorization, token -> {
+            ExamTranscriptCsvFilePresenter presenter = new ExamTranscriptCsvFilePresenter();
+            createExamTranscriptUseCase.execute(examId, presenter);
+            return respondInputStreamResource(presenter.present());
         });
     }
 

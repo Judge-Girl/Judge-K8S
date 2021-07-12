@@ -4,8 +4,11 @@ import tw.waterball.judgegirl.commons.models.files.FileResource;
 import tw.waterball.judgegirl.problemapi.views.ProblemView;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static tw.waterball.judgegirl.commons.utils.StreamUtils.filterToList;
 
 public class FakeProblemServiceDriver implements ProblemServiceDriver {
 
@@ -29,6 +32,11 @@ public class FakeProblemServiceDriver implements ProblemServiceDriver {
     @Override
     public FileResource downloadTestCaseIOs(int problemId, String testcaseId) throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<ProblemView> getProblemsByIds(List<Integer> ids) {
+        return filterToList(problems.values(), problem -> ids.contains(problem.getId()));
     }
 
     public void clear() {

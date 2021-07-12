@@ -2,10 +2,13 @@ package tw.waterball.judgegirl.springboot.academy.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.SneakyThrows;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.h2.tools.Server;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -37,6 +40,9 @@ import tw.waterball.judgegirl.submissionapi.views.SubmissionView;
 import tw.waterball.judgegirl.testkit.AbstractSpringBootTest;
 
 import javax.transaction.Transactional;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashSet;
@@ -126,8 +132,8 @@ class ExamControllerTest extends AbstractSpringBootTest {
     }
 
     private void fakeProblemServiceDriver() {
-        Problem p1 = problemTemplate(testcaseGrades).id(PROBLEM_ID).build(),
-                p2 = problemTemplate(testcaseGrades).id(ANOTHER_PROBLEM_ID).build();
+        Problem p1 = problemTemplate(testcaseGrades).id(PROBLEM_ID).title("Title_1").build(),
+                p2 = problemTemplate(testcaseGrades).id(ANOTHER_PROBLEM_ID).title("Title_2").build();
         problem = toViewModel(p1);
         submissionWith2ACs = randomizedSubmission(p1, STUDENT_A_ID, 2);
         problemServiceDriver.addProblemView(problem);
@@ -628,11 +634,72 @@ class ExamControllerTest extends AbstractSpringBootTest {
                 mapToList(transcript.records, TranscriptView.RecordView::getSubmission));
     }
 
+    @Test
+    void testProduceCsvFileOfExamTranscript() throws Exception {
+        Integer[] studentIds = {STUDENT_A_ID, STUDENT_B_ID, STUDENT_C_ID, STUDENT_D_ID};
+        var exam = createExamAndGet(now(), oneSecondAfter(), "Exam");
+        createQuestionAndGet(new CreateQuestionUseCase.Request(exam.id, PROBLEM_ID, 1, 50, 0)).toEntity();
+        createQuestionAndGet(new CreateQuestionUseCase.Request(exam.id, ANOTHER_PROBLEM_ID, 1, 50, 1)).toEntity();
+        givenStudentsParticipatingExam(studentIds, exam);
+        publishVerdictAndAwait(problem, exam, randomizedSubmission(toEntity(problem), STUDENT_A_ID, 3));
+        publishVerdictAndAwait(anotherProblem, exam, randomizedSubmission(toEntity(anotherProblem), STUDENT_A_ID, 3));
+        publishVerdictAndAwait(problem, exam, randomizedSubmission(toEntity(problem), STUDENT_B_ID, 2));
+        publishVerdictAndAwait(anotherProblem, exam, randomizedSubmission(toEntity(anotherProblem), STUDENT_B_ID, 1));
+        publishVerdictAndAwait(problem, exam, submission(randomUUID().toString()).CE(problem.totalGrade).build(STUDENT_C_ID, PROBLEM_ID, CURRENTLY_ONLY_SUPPORT_C));
+        publishVerdictAndAwait(anotherProblem, exam, randomizedSubmission(toEntity(anotherProblem), STUDENT_C_ID, 1));
+
+        var transcript = produceExamTranscript(exam);
+
+        var response = produceCsvFileExamTranscript(exam);
+
+        final String COLUMN_NAME = "Name";
+        final String COLUMN_EMAIL = "Email";
+        final String COLUMN_PROBLEM_1_TITLE = problem.title;
+        final String COLUMN_PROBLEM_2_TITLE = anotherProblem.title;
+        final String COLUMN_TOTAL_SCORE = "Total Score";
+
+        Reader in = new InputStreamReader(new ByteArrayInputStream(response.getContentAsByteArray()));
+        var records = CSVFormat.DEFAULT.withHeader
+                (COLUMN_NAME, COLUMN_EMAIL, COLUMN_PROBLEM_1_TITLE, COLUMN_PROBLEM_2_TITLE, COLUMN_TOTAL_SCORE)
+                .parse(in);
+
+        CSVRecord csvHeader = records.iterator().next();
+        assertEquals(COLUMN_NAME, csvHeader.get(COLUMN_NAME));
+        assertEquals(COLUMN_EMAIL, csvHeader.get(COLUMN_EMAIL));
+        assertEquals(COLUMN_PROBLEM_1_TITLE, csvHeader.get(COLUMN_PROBLEM_1_TITLE));
+        assertEquals(COLUMN_PROBLEM_2_TITLE, csvHeader.get(COLUMN_PROBLEM_2_TITLE));
+        assertEquals(COLUMN_TOTAL_SCORE, csvHeader.get(COLUMN_TOTAL_SCORE));
+
+        var scoreBoard = transcript.scoreBoard;
+        for (CSVRecord record : records) {
+            String email = record.get(COLUMN_EMAIL);
+            assertTrue(scoreBoard.containsKey(email));
+
+            var questionScores = scoreBoard.get(email).getQuestionScores();
+            int problemScore = questionScores.get(problem.id);
+            int anotherProblemScore = questionScores.get(anotherProblem.id);
+            assertEquals(problemScore, Integer.valueOf(record.get(problem.title)));
+            assertEquals(anotherProblemScore, Integer.valueOf(record.get(anotherProblem.title)));
+
+            int actualTotalScore = problemScore + anotherProblemScore;
+            assertEquals(actualTotalScore, Integer.valueOf(record.get(COLUMN_TOTAL_SCORE)));
+        }
+    }
+
     @SneakyThrows
     private TranscriptView produceExamTranscript(ExamView exam) {
         return getBody(mockMvc.perform(withAdminToken(
                 get("/api/exams/{examId}/transcript", exam.getId())))
                 .andExpect(status().isOk()), TranscriptView.class);
+    }
+
+    @SneakyThrows
+    private MockHttpServletResponse produceCsvFileExamTranscript(ExamView exam) {
+        return mockMvc.perform(withAdminToken(
+                get("/api/exams/{examId}/transcript/csv", exam.getId())))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .andReturn().getResponse();
     }
 
     @SneakyThrows

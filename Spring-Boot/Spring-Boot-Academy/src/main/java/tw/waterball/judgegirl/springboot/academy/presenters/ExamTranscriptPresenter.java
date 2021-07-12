@@ -1,8 +1,9 @@
 package tw.waterball.judgegirl.springboot.academy.presenters;
 
-import tw.waterball.judgegirl.academy.domain.usecases.exam.CalculateExamScoreUseCase;
-import tw.waterball.judgegirl.academy.domain.usecases.exam.CalculateExamScoreUseCase.ExamineeRecord;
+import tw.waterball.judgegirl.academy.domain.usecases.exam.CreateExamTranscriptUseCase;
+import tw.waterball.judgegirl.academy.domain.usecases.exam.CreateExamTranscriptUseCase.ExamineeRecord;
 import tw.waterball.judgegirl.primitives.exam.Exam;
+import tw.waterball.judgegirl.problemapi.views.ProblemView;
 import tw.waterball.judgegirl.springboot.academy.view.TranscriptView;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import static tw.waterball.judgegirl.submissionapi.views.SubmissionView.toViewMo
 /**
  * @author - johnny850807@gmail.com (Waterball)
  */
-public class ExamTranscriptPresenter implements CalculateExamScoreUseCase.Presenter {
+public class ExamTranscriptPresenter implements CreateExamTranscriptUseCase.Presenter {
     private final TranscriptView.TranscriptViewBuilder builder = TranscriptView.builder();
 
     @Override
@@ -32,6 +33,10 @@ public class ExamTranscriptPresenter implements CalculateExamScoreUseCase.Presen
                         questionRecord.getQuestion().getProblemId(),
                         toViewModel(questionRecord.getRecord())
                 )).collect(toUnmodifiableList()));
+    }
+
+    @Override
+    public void showProblems(List<ProblemView> problems) {
     }
 
     private Map<String, TranscriptView.ExamineeRecordView> mapEmailToExamineeRecord(List<ExamineeRecord> examineeRecords) {
@@ -51,6 +56,4 @@ public class ExamTranscriptPresenter implements CalculateExamScoreUseCase.Presen
     public TranscriptView present() {
         return builder.build();
     }
-
-
 }

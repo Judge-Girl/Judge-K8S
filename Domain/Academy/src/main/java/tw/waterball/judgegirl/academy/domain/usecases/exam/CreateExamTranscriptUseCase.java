@@ -9,6 +9,8 @@ import tw.waterball.judgegirl.primitives.exam.Examinee;
 import tw.waterball.judgegirl.primitives.exam.Question;
 import tw.waterball.judgegirl.primitives.exam.Record;
 import tw.waterball.judgegirl.primitives.submission.Submission;
+import tw.waterball.judgegirl.problemapi.clients.ProblemServiceDriver;
+import tw.waterball.judgegirl.problemapi.views.ProblemView;
 import tw.waterball.judgegirl.studentapi.clients.StudentServiceDriver;
 import tw.waterball.judgegirl.submissionapi.clients.SubmissionServiceDriver;
 import tw.waterball.judgegirl.submissionapi.views.SubmissionView;
@@ -23,14 +25,16 @@ import static tw.waterball.judgegirl.commons.utils.StreamUtils.*;
  * @author - johnny850807@gmail.com (Waterball)
  */
 @Named
-public class CalculateExamScoreUseCase extends AbstractExamUseCase {
+public class CreateExamTranscriptUseCase extends AbstractExamUseCase {
     private final StudentServiceDriver studentServiceDriver;
     private final SubmissionServiceDriver submissionServiceDriver;
+    private final ProblemServiceDriver problemServiceDriver;
 
-    public CalculateExamScoreUseCase(ExamRepository examRepository, StudentServiceDriver studentServiceDriver, SubmissionServiceDriver submissionServiceDriver) {
+    public CreateExamTranscriptUseCase(ExamRepository examRepository, StudentServiceDriver studentServiceDriver, SubmissionServiceDriver submissionServiceDriver, ProblemServiceDriver problemServiceDriver) {
         super(examRepository);
         this.studentServiceDriver = studentServiceDriver;
         this.submissionServiceDriver = submissionServiceDriver;
+        this.problemServiceDriver = problemServiceDriver;
     }
 
     public void execute(int examId, Presenter presenter) {
@@ -38,6 +42,8 @@ public class CalculateExamScoreUseCase extends AbstractExamUseCase {
         var examineeRecords = getExamineeRecords(exam);
         presenter.showExam(exam);
         presenter.showRecords(examineeRecords);
+        var problems = findProblemsByIds(getProblemIds(exam));
+        presenter.showProblems(problems);
     }
 
     private List<ExamineeRecord> getExamineeRecords(Exam exam) {
@@ -79,10 +85,20 @@ public class CalculateExamScoreUseCase extends AbstractExamUseCase {
         return zipToList(examineeToQuestionRecords, ExamineeRecord::new);
     }
 
+    private List<Integer> getProblemIds(Exam exam) {
+        return mapToList(exam.getQuestions(), Question::getProblemId);
+    }
+
+    private List<ProblemView> findProblemsByIds(List<Integer> problemIds) {
+        return problemServiceDriver.getProblemsByIds(problemIds);
+    }
+
     public interface Presenter {
         void showExam(Exam exam);
 
         void showRecords(List<ExamineeRecord> examineeRecords);
+
+        void showProblems(List<ProblemView> problems);
     }
 
     @Value

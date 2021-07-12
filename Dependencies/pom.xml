@@ -39,6 +39,7 @@
         <fridujo.rabbitmq-mock.version>1.0.14</fridujo.rabbitmq-mock.version>
         <h2database.version>1.4.200</h2database.version>
         <spring-boot-dependencies.version>2.3.0.RELEASE</spring-boot-dependencies.version>
+        <org.apache.commons-csv.version>1.8</org.apache.commons-csv.version>
     </properties>
 
     <dependencyManagement>
@@ -275,6 +276,12 @@
                 <artifactId>h2</artifactId>
                 <version>${h2database.version}</version>
                 <scope>runtime</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-csv</artifactId>
+                <version>${org.apache.commons-csv.version}</version>
             </dependency>
 
             <!-- Start of Spring Boot Components -->
